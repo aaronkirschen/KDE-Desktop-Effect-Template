@@ -1,0 +1,5 @@
+File=options.kcfg
+ClassName=TemplateEffectConfig
+Mutators=true
+DefaultValueGetters=true
+Singleton=true

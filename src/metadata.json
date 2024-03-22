@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "aaronkirschen@gmail.com",
+                "Name": "Aaron Kirschen"
+            }
+        ],
+        "Category": "Appearance",
+        "Description": "An effect that does nothing.",
+        "EnabledByDefault": false,
+        "License": "GPL",
+        "Name": "TemplateEffect",
+        "ServiceTypes": [
+            "KWin/Effect"
+        ],
+        "Version": "git"
+    },
+    "X-KDE-ConfigModule": "kwin4_effect_templateeffect_config"
+}
