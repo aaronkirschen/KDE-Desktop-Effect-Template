@@ -5,22 +5,17 @@
 
 #include "template_effect.h"
 #include "template_effect_config.h"
+#include "customization.h"
 
-#include <KX11Extras>
 #include <QDBusError>
 #include <QtDBus/QDBusConnection>
-
-#include <core/output.h>
-#include <core/renderviewport.h>
-#include <effect/effecthandler.h>
-#include <opengl/glutils.h>
 
 #include <KGlobalAccel>
 #include <KLocalizedString>
 #include <QAction>
 
 TemplateEffect::TemplateEffect()
-        : m_inited(false), m_valid(true) {
+        : m_inited(false), m_valid(false) {
     reconfigure(ReconfigureAll);
 
     if (!m_inited) {
@@ -50,94 +45,122 @@ bool TemplateEffect::enabledByDefault() {
 bool TemplateEffect::isActive() const {
     return m_valid && !m_windowsWithEffect.isEmpty();
 }
-void TemplateEffect::setupShortcuts() {
-    auto *toggleAction = new QAction(this);
-    toggleAction->setObjectName(QStringLiteral("ToggleTemplateEffect"));
-    toggleAction->setText(i18n("Toggle Template Effect on Window"));
-    KGlobalAccel::self()->setDefaultShortcut(toggleAction, QList<QKeySequence>() << (Qt::CTRL | Qt::ALT | Qt::Key_G));
-    KGlobalAccel::self()->setShortcut(toggleAction, QList<QKeySequence>() << (Qt::CTRL | Qt::ALT | Qt::Key_G));
-    connect(toggleAction, &QAction::triggered, this,
-            &TemplateEffect::toggleEffectOnActiveWindow);
-}
-
-void TemplateEffect::setupDBusConnection() {
-    auto connection = QDBusConnection::sessionBus();
-    if (!connection.isConnected()) {
-        qWarning("TemplateEffect: Cannot connect to the D-Bus session bus.\n");
-        return;
-    }
-
-    if (!connection.registerService("org.kde.TemplateEffect")) {
-        qWarning("%s\n", qPrintable(connection.lastError().message()));
-        return;
-    }
-
-    if (!connection.registerObject("/TemplateEffect", this,
-                                   QDBusConnection::ExportAllSlots)) {
-        qWarning("%s\n", qPrintable(connection.lastError().message()));
-        return;
-    }
-}
 
 bool TemplateEffect::loadData() {
     m_inited = true;
     return m_inited;
 }
 
-bool TemplateEffect::shouldApplyEffectOnWindow(KWin::EffectWindow *window) {
-    if (m_windowsWithEffect.contains(window)) {
-        return true;
+void TemplateEffect::setupDBusConnection() {
+    auto connection = QDBusConnection::sessionBus();
+    if (!connection.isConnected()) {
+        qWarning() << Customization::EffectName << ": Cannot connect to the D-Bus session bus.";
+        return;
     }
-    return false;
+
+    if (!connection.registerService("org.kde." + Customization::EffectName)) {
+        qWarning() << Customization::EffectName << ": " << connection.lastError().message();
+        return;
+    }
+
+    if (!connection.registerObject("/" + Customization::EffectName, this,
+                                   QDBusConnection::ExportAllSlots)) {
+        qWarning() << Customization::EffectName << ": " << connection.lastError().message();
+        return;
+    }
 }
 
-void TemplateEffect::applyEffectOnWindow(KWin::EffectWindow *window) {
-    // Apply the effect on the window
-    redirect(window);
-    qInfo() << "Effect applied on window" << window ;
+void TemplateEffect::setupShortcuts() {
+    auto *toggleAction = new QAction(this);
+    toggleAction->setObjectName(Customization::ToggleActionName);
+    toggleAction->setText(i18n(Customization::ToggleActionDescription));
+    KGlobalAccel::self()->setDefaultShortcut(toggleAction, Customization::ToggleActionShortcut);
+    KGlobalAccel::self()->setShortcut(toggleAction, Customization::ToggleActionShortcut);
+    connect(toggleAction, &QAction::triggered, this,
+            &TemplateEffect::toggleEffectOnActiveWindow);
 }
 
-void TemplateEffect::removeEffectFromWindow(KWin::EffectWindow *window) {
-    // Remove the effect on the window
-    unredirect(window);
-    qInfo() << "Effect removed on window" << window ;
-
+bool TemplateEffect::shouldApplyEffectOnWindow(KWin::EffectWindow *effectWindow) {
+    // Add conditions here to determine if the effect should be applied on the window
+    // For example:
+    // if (effectWindow->isNormalWindow() && effectWindow->isMovable()) {
+    //     return true;
+    // }
+    // return false;
+    return false; // Placeholder, replace with actual conditions
 }
 
-void TemplateEffect::toggleEffectOnWindow(KWin::EffectWindow *window) {
-    if (!m_windowsWithEffect.contains(window)) {
-        m_windowsWithEffect.append(window);
+bool TemplateEffect::isEffectAppliedOnWindow(KWin::EffectWindow *effectWindow) {
+    return m_windowsWithEffect.contains(effectWindow);
+}
+
+void TemplateEffect::slotWindowAdded(KWin::EffectWindow *effectWindow) {
+    if (!effectWindow) {
+        qWarning() << Customization::EffectName << ": Null window pointer in slotWindowAdded";
+        return;
+    }
+
+    if (shouldApplyEffectOnWindow(effectWindow) && !isEffectAppliedOnWindow(effectWindow)) {
+        applyEffectOnWindow(effectWindow);
+    }
+}
+
+void TemplateEffect::slotWindowClosed(KWin::EffectWindow *effectWindow) {
+    if (!effectWindow) {
+        qWarning() << Customization::EffectName << ": Null window pointer in slotWindowClosed";
+    }
+
+    if (isEffectAppliedOnWindow(effectWindow)) {
+        removeEffectFromWindow(effectWindow);
+    }
+}
+
+void TemplateEffect::applyEffectOnWindow(KWin::EffectWindow *effectWindow) {
+    if (m_windowsWithEffect.contains(effectWindow)) {
+        qWarning() << Customization::EffectName << ": applyEffectOnWindow called on a window that already has effect!" << effectWindow;
+        return;
+    }
+
+    m_windowsWithEffect.append(effectWindow);
+    qDebug() << Customization::EffectName << ": Effect applied on window" << effectWindow;
+    handleApplyEffectOnWindow(effectWindow);
+}
+
+void TemplateEffect::handleApplyEffectOnWindow(KWin::EffectWindow *effectWindow) {
+    qDebug() << Customization::EffectName << ": Handling adding effect on window" << effectWindow;
+}
+
+void TemplateEffect::removeEffectFromWindow(KWin::EffectWindow *effectWindow) {
+    if (!m_windowsWithEffect.contains(effectWindow)) {
+        qWarning() << Customization::EffectName << ": removeEffectFromWindow called on a window that does not have effect!" << effectWindow;
+        return;
+    }
+    m_windowsWithEffect.removeOne(effectWindow);
+    qDebug() << Customization::EffectName << ": Effect removed on window" << effectWindow;
+    handleRemoveEffectFromWindow(effectWindow);
+}
+
+void TemplateEffect::handleRemoveEffectFromWindow(KWin::EffectWindow *effectWindow) {
+    qDebug() << Customization::EffectName << ": Handling removing effect from window" << effectWindow;
+}
+
+void TemplateEffect::toggleEffectOnWindow(KWin::EffectWindow *effectWindow) {
+    qDebug() << Customization::EffectName << ": Toggling effect on window" << effectWindow;
+    if (isEffectAppliedOnWindow(effectWindow)) {
+        qDebug() << Customization::EffectName << ": Removing effect from window" << effectWindow;
+        removeEffectFromWindow(effectWindow);
     } else {
-        m_windowsWithEffect.removeOne(window);
+        qDebug() << Customization::EffectName << ": Applying effect on window" << effectWindow;
+        applyEffectOnWindow(effectWindow);
     }
-    if (shouldApplyEffectOnWindow(window)) {
-        applyEffectOnWindow(window);
-    } else {
-        removeEffectFromWindow(window);
-    }
-    window->addRepaintFull();
-    qInfo() << "Effect toggled on window" << window ;
-
 }
 
 void TemplateEffect::toggleEffectOnActiveWindow() {
-    auto window = KWin::effects->activeWindow();
-    if (!window) {
-        qWarning("TemplateEffect: No active window to toggle effect on.");
+    auto effectWindow = KWin::effects->activeWindow();
+    if (!effectWindow) {
+        qWarning() << Customization::EffectName << ": No active window to toggle effect on.";
         return;
     }
-    toggleEffectOnWindow(window);
+    qDebug() << Customization::EffectName << ": Toggling effect on active window" << effectWindow;
+    toggleEffectOnWindow(effectWindow);
 }
-
-void TemplateEffect::slotWindowAdded(KWin::EffectWindow *window) {
-    if (shouldApplyEffectOnWindow(window)) {
-        applyEffectOnWindow(window);
-    }
-}
-
-void TemplateEffect::slotWindowClosed(KWin::EffectWindow *window) {
-    if (shouldApplyEffectOnWindow(window)) {
-        removeEffectFromWindow(window);
-    }
-}
-

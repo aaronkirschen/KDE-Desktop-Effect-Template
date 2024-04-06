@@ -4,12 +4,9 @@ set(effect_SRCS
 )
 
 kconfig_add_kcfg_files(effect_SRCS template_effect_config.kcfgc)
-kcoreaddons_add_plugin(kwin4_effect_templateeffect SOURCES ${effect_SRCS} INSTALL_NAMESPACE "kwin/effects/plugins/")
+kcoreaddons_add_plugin(${CMAKE_PROJECT_NAME} SOURCES ${effect_SRCS} INSTALL_NAMESPACE "kwin/effects/plugins/")
 
-find_package(KF6GlobalAccel REQUIRED)
-find_package(KF6I18n REQUIRED)
-
-target_link_libraries(kwin4_effect_templateeffect
+target_link_libraries(${CMAKE_PROJECT_NAME}
     KWin::kwin
     Qt6::CorePrivate
     Qt6::DBus
@@ -17,7 +14,3 @@ target_link_libraries(kwin4_effect_templateeffect
     KF6::GlobalAccel
     KF6::I18n
 )
-
-install(DIRECTORY shaders DESTINATION ${KDE_INSTALL_DATADIR}/kwin)
-
-

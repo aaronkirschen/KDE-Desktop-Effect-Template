@@ -1,0 +1,22 @@
+{
+  "__IMPORTANT_NOTICE__": [
+    "Direct changes to the './src/metadata.json' file WILL NOT PERSIST between builds.",
+    "The './src/metadata.json' is GENERATED from './metadata.json.in'.",
+    "For configuration and customization, modify settings in './src/customization.h'.",
+    "To generate './src/metadata.json', 'generate_metadata.cmake' is called from './CMakeLists.txt'."
+  ],
+    "KPlugin": {
+        "Name": "@EFFECT_NAME@",
+        "Description": "@EFFECT_DESCRIPTION@",
+        "Category": "@EFFECT_CATEGORY@",
+        "EnabledByDefault": @EFFECT_ENABLED_BY_DEFAULT@,
+        "License": "@EFFECT_LICENSE@",
+        "ServiceTypes": [
+            @EFFECT_SERVICE_TYPES@
+        ],
+         "Authors": [
+            @AUTHORS@
+         ]
+    },
+    "X-KDE-ConfigModule": "@EFFECT_CONFIG_MODULE@"
+}

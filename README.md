@@ -10,7 +10,7 @@ You need to install development packages for your distribution first:
 <summary>OpenSUSE Tumbleweed</summary>
 
 ```
-sudo zypper in git cmake gcc-c++ kf6-kconfigwidgets-devel kf6-kcmutils-devel kwin6-devel kf6-kwindowsystem-devel qt6-quick-devel qt6-core-private-devel kf6-kglobalaccel-devel
+sudo zypper in git cmake gcc-c++ kf6-kconfigwidgets-devel kf6-kcmutils-devel kwin6-devel kf6-kwindowsystem-devel qt6-quick-devel qt6-core-private-devel kf6-kglobalaccel-devel kwayland6-devel
 ```
 
 </details>
