@@ -1,6 +1,9 @@
 # KDE-Desktop-Effect-Template
 A template designed for creating KWin Desktop Effects compatible with KDE Plasma 6.
 
+TODO: add config module
+
+TODO: Add instructions on customization to README
 
 # How to build from source code:
 
