@@ -36,7 +36,6 @@ string(REGEX MATCHALL "\\{\"([^\"]*)\",[ \t\r\n]*\"([^\"]*)\"\\}" AUTHORS_MATCHE
 
 set(AUTHORS "")
 foreach(AUTHOR_MATCH IN LISTS AUTHORS_MATCHES)
-    # Extract email and name directly using REGEX REPLACE
     string(REGEX REPLACE ".*\\{\"([^\"]*)\".*" "\\1" AUTHOR_EMAIL "${AUTHOR_MATCH}")
     string(REGEX REPLACE ".*\"([^\"]*)\"\\}.*" "\\1" AUTHOR_NAME "${AUTHOR_MATCH}")
 
